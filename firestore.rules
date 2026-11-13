@@ -1,0 +1,210 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Global default-deny safety net
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isValidUserProfile(data, userId) {
+      return data.userId == userId &&
+        data.displayName is string && data.displayName.size() >= 1 && data.displayName.size() <= 60 &&
+        data.preferredCurrency is string && data.preferredCurrency.size() >= 3 && data.preferredCurrency.size() <= 5 &&
+        data.temperatureUnit in ['METRIC', 'IMPERIAL'] &&
+        data.preferredCabinClass in ['ECONOMY', 'PREMIUM_ECONOMY', 'BUSINESS', 'FIRST'] &&
+        data.homeAirportIata is string && data.homeAirportIata.size() >= 3 && data.homeAirportIata.size() <= 4 &&
+        (!('travelStyle' in data) || (data.travelStyle is string && data.travelStyle.size() <= 40)) &&
+        (!('budgetTier' in data) || (data.budgetTier is string && data.budgetTier.size() <= 30)) &&
+        data.biometricThresholdUsd is number && data.biometricThresholdUsd >= 0 && data.biometricThresholdUsd <= 50000 &&
+        data.darkGlassTheme is bool;
+    }
+
+    function isValidTripPlan(data, userId) {
+      return data.userId == userId &&
+        data.title is string && data.title.size() >= 1 && data.title.size() <= 120 &&
+        data.destination is string && data.destination.size() >= 1 && data.destination.size() <= 80 &&
+        data.startDate is string && data.startDate.size() >= 1 && data.startDate.size() <= 30 &&
+        data.endDate is string && data.endDate.size() >= 1 && data.endDate.size() <= 30 &&
+        data.travellersCount is int && data.travellersCount >= 1 && data.travellersCount <= 20 &&
+        data.budgetUsd is number && data.budgetUsd >= 0 && data.budgetUsd <= 250000 &&
+        data.style is string && data.style.size() >= 1 && data.style.size() <= 40 &&
+        data.status in ['PLANNED', 'UPCOMING', 'COMPLETED'];
+    }
+
+    function isValidBookingDoc(data, userId) {
+      return data.userId == userId &&
+        data.referenceCode is string && data.referenceCode.size() >= 3 && data.referenceCode.size() <= 40 &&
+        data.bookingType in ['FLIGHT', 'HOTEL', 'CAR_RENTAL', 'DINING', 'ACTIVITY'] &&
+        data.title is string && data.title.size() >= 1 && data.title.size() <= 140 &&
+        data.providerSource is string && data.providerSource.size() >= 1 && data.providerSource.size() <= 80 &&
+        (!('providerPnr' in data) || data.providerPnr == null) &&
+        data.originOrLocation is string && data.originOrLocation.size() >= 1 && data.originOrLocation.size() <= 80 &&
+        (!('destination' in data) || data.destination == null || (data.destination is string && data.destination.size() <= 80)) &&
+        data.totalAmountUsd is number && data.totalAmountUsd >= 0 && data.totalAmountUsd <= 250000 &&
+        data.status in ['REQUESTED', 'HELD', 'USER_APPROVED', 'NOT_BOOKABLE', 'CANCELLED'] &&
+        data.sha256AuditHash is string && data.sha256AuditHash.size() == 64 && data.sha256AuditHash.matches('^[a-f0-9]{64}$');
+    }
+
+    function isValidItinerarySlot(data, userId, tripId) {
+      return data.userId == userId &&
+        data.tripId == tripId &&
+        data.dayNumber is int && data.dayNumber >= 1 && data.dayNumber <= 60 &&
+        data.timeRange is string && data.timeRange.size() >= 1 && data.timeRange.size() <= 80 &&
+        data.title is string && data.title.size() >= 1 && data.title.size() <= 140 &&
+        data.location is string && data.location.size() >= 1 && data.location.size() <= 160 &&
+        (!('latitude' in data) || data.latitude == null || (data.latitude is number && data.latitude >= -90 && data.latitude <= 90)) &&
+        (!('longitude' in data) || data.longitude == null || (data.longitude is number && data.longitude >= -180 && data.longitude <= 180)) &&
+        data.category is string && data.category.size() >= 1 && data.category.size() <= 40 &&
+        data.durationMinutes is int && data.durationMinutes >= 5 && data.durationMinutes <= 1440 &&
+        data.routeSequence is int && data.routeSequence >= 1 && data.routeSequence <= 200 &&
+        data.notes is string && data.notes.size() <= 500 &&
+        data.estimatedCostUsd is number && data.estimatedCostUsd >= 0 && data.estimatedCostUsd <= 250000 &&
+        data.calSyncStatus is string && data.calSyncStatus.size() >= 1 && data.calSyncStatus.size() <= 80;
+    }
+
+    function isValidAiMessage(data, userId) {
+      return data.userId == userId &&
+        data.isUser is bool &&
+        data.text is string && data.text.size() >= 1 && data.text.size() <= 8000 &&
+        (!('toolTraceSummary' in data) || data.toolTraceSummary == null || (data.toolTraceSummary is string && data.toolTraceSummary.size() <= 1000)) &&
+        data.isError is bool;
+    }
+
+    function isValidSavedItem(data, userId) {
+      return data.userId == userId &&
+        data.itemType in ['DESTINATION', 'HOTEL', 'FLIGHT', 'ATTRACTION', 'ITINERARY'] &&
+        data.title is string && data.title.size() >= 1 && data.title.size() <= 120 &&
+        data.subtitle is string && data.subtitle.size() <= 160 &&
+        data.category is string && data.category.size() >= 1 && data.category.size() <= 40 &&
+        data.priceLabel is string && data.priceLabel.size() <= 40 &&
+        data.rating is number && data.rating >= 0 && data.rating <= 5;
+    }
+
+    match /users/{userId} {
+      allow get: if isValidId(userId) && isOwner(userId);
+      allow list: if false;
+      allow create: if isValidId(userId) && isOwner(userId) &&
+        incoming().keys().hasAll(['userId', 'displayName', 'preferredCurrency', 'temperatureUnit', 'preferredCabinClass', 'homeAirportIata', 'biometricThresholdUsd', 'darkGlassTheme', 'createdAt', 'updatedAt']) &&
+        incoming().keys().hasOnly(['userId', 'displayName', 'preferredCurrency', 'temperatureUnit', 'preferredCabinClass', 'homeAirportIata', 'travelStyle', 'budgetTier', 'biometricThresholdUsd', 'darkGlassTheme', 'createdAt', 'updatedAt']) &&
+        incoming().createdAt is timestamp && incoming().createdAt <= request.time &&
+        incoming().updatedAt is timestamp && incoming().updatedAt <= request.time &&
+        isValidUserProfile(incoming(), userId);
+      allow update: if isValidId(userId) && isOwner(userId) &&
+        isValidUserProfile(incoming(), userId) &&
+        incoming().userId == existing().userId &&
+        incoming().createdAt == existing().createdAt &&
+        incoming().updatedAt is timestamp && incoming().updatedAt <= request.time &&
+        incoming().diff(existing()).affectedKeys().hasOnly(['displayName', 'preferredCurrency', 'temperatureUnit', 'preferredCabinClass', 'homeAirportIata', 'travelStyle', 'budgetTier', 'biometricThresholdUsd', 'darkGlassTheme', 'updatedAt']);
+      allow delete: if isValidId(userId) && isOwner(userId);
+
+      match /trips/{tripId} {
+        allow get: if isValidId(userId) && isValidId(tripId) && isOwner(userId);
+        allow list: if isValidId(userId) && isOwner(userId);
+        allow create: if isValidId(userId) && isValidId(tripId) && isOwner(userId) &&
+          incoming().keys().hasAll(['userId', 'title', 'destination', 'startDate', 'endDate', 'travellersCount', 'budgetUsd', 'style', 'status', 'createdAt', 'updatedAt']) &&
+          incoming().keys().hasOnly(['userId', 'title', 'destination', 'startDate', 'endDate', 'travellersCount', 'budgetUsd', 'style', 'status', 'createdAt', 'updatedAt']) &&
+          incoming().createdAt is timestamp && incoming().createdAt <= request.time &&
+          incoming().updatedAt is timestamp && incoming().updatedAt <= request.time &&
+          isValidTripPlan(incoming(), userId);
+        allow update: if isValidId(userId) && isValidId(tripId) && isOwner(userId) &&
+          isValidTripPlan(incoming(), userId) &&
+          incoming().userId == existing().userId &&
+          incoming().createdAt == existing().createdAt &&
+          incoming().updatedAt is timestamp && incoming().updatedAt <= request.time &&
+          incoming().diff(existing()).affectedKeys().hasOnly(['title', 'destination', 'startDate', 'endDate', 'travellersCount', 'budgetUsd', 'style', 'status', 'updatedAt']);
+        allow delete: if isValidId(userId) && isValidId(tripId) && isOwner(userId);
+
+        match /itinerary_slots/{slotId} {
+          allow get: if isValidId(userId) && isValidId(tripId) && isValidId(slotId) && isOwner(userId);
+          allow list: if isValidId(userId) && isValidId(tripId) && isOwner(userId);
+          allow create: if isValidId(userId) && isValidId(tripId) && isValidId(slotId) && isOwner(userId) &&
+            exists(/databases/$(database)/documents/users/$(userId)/trips/$(tripId)) &&
+            incoming().keys().hasAll(['userId', 'tripId', 'dayNumber', 'timeRange', 'title', 'location', 'category', 'durationMinutes', 'routeSequence', 'notes', 'estimatedCostUsd', 'calSyncStatus', 'createdAt', 'updatedAt']) &&
+            incoming().keys().hasOnly(['userId', 'tripId', 'dayNumber', 'timeRange', 'title', 'location', 'latitude', 'longitude', 'category', 'durationMinutes', 'routeSequence', 'notes', 'estimatedCostUsd', 'calSyncStatus', 'createdAt', 'updatedAt']) &&
+            incoming().createdAt is timestamp && incoming().createdAt <= request.time &&
+            incoming().updatedAt is timestamp && incoming().updatedAt <= request.time &&
+            isValidItinerarySlot(incoming(), userId, tripId);
+          allow update: if isValidId(userId) && isValidId(tripId) && isValidId(slotId) && isOwner(userId) &&
+            isValidItinerarySlot(incoming(), userId, tripId) &&
+            incoming().userId == existing().userId &&
+            incoming().tripId == existing().tripId &&
+            incoming().createdAt == existing().createdAt &&
+            incoming().updatedAt is timestamp && incoming().updatedAt <= request.time &&
+            incoming().diff(existing()).affectedKeys().hasOnly(['dayNumber', 'timeRange', 'title', 'location', 'latitude', 'longitude', 'category', 'durationMinutes', 'routeSequence', 'notes', 'estimatedCostUsd', 'calSyncStatus', 'updatedAt']);
+          allow delete: if isValidId(userId) && isValidId(tripId) && isValidId(slotId) && isOwner(userId);
+        }
+      }
+
+      match /bookings/{bookingId} {
+        allow get: if isValidId(userId) && isValidId(bookingId) && isOwner(userId);
+        allow list: if isValidId(userId) && isOwner(userId);
+        allow create: if isValidId(userId) && isValidId(bookingId) && isOwner(userId) &&
+          incoming().keys().hasAll(['userId', 'referenceCode', 'bookingType', 'title', 'providerSource', 'originOrLocation', 'totalAmountUsd', 'status', 'sha256AuditHash', 'createdAt', 'updatedAt']) &&
+          incoming().keys().hasOnly(['userId', 'referenceCode', 'bookingType', 'title', 'providerSource', 'providerPnr', 'originOrLocation', 'destination', 'totalAmountUsd', 'status', 'sha256AuditHash', 'createdAt', 'updatedAt']) &&
+          incoming().createdAt is timestamp && incoming().createdAt <= request.time &&
+          incoming().updatedAt is timestamp && incoming().updatedAt <= request.time &&
+          incoming().status in ['REQUESTED', 'HELD', 'NOT_BOOKABLE'] &&
+          isValidBookingDoc(incoming(), userId);
+        allow update: if isValidId(userId) && isValidId(bookingId) && isOwner(userId) &&
+          isValidBookingDoc(incoming(), userId) &&
+          existing().status != 'CANCELLED' &&
+          incoming().userId == existing().userId &&
+          incoming().createdAt == existing().createdAt &&
+          incoming().referenceCode == existing().referenceCode &&
+          incoming().updatedAt is timestamp && incoming().updatedAt <= request.time &&
+          incoming().diff(existing()).affectedKeys().hasOnly(['status', 'updatedAt']);
+        allow delete: if false;
+      }
+
+      match /saved_items/{itemId} {
+        allow get: if isValidId(userId) && isValidId(itemId) && isOwner(userId);
+        allow list: if isValidId(userId) && isOwner(userId);
+        allow create: if isValidId(userId) && isValidId(itemId) && isOwner(userId) &&
+          incoming().keys().hasAll(['userId', 'itemType', 'title', 'subtitle', 'category', 'priceLabel', 'rating', 'createdAt', 'updatedAt']) &&
+          incoming().keys().hasOnly(['userId', 'itemType', 'title', 'subtitle', 'category', 'priceLabel', 'rating', 'createdAt', 'updatedAt']) &&
+          incoming().createdAt is timestamp && incoming().createdAt <= request.time &&
+          incoming().updatedAt is timestamp && incoming().updatedAt <= request.time &&
+          isValidSavedItem(incoming(), userId);
+        allow update: if isValidId(userId) && isValidId(itemId) && isOwner(userId) &&
+          isValidSavedItem(incoming(), userId) &&
+          incoming().userId == existing().userId &&
+          incoming().createdAt == existing().createdAt &&
+          incoming().updatedAt is timestamp && incoming().updatedAt <= request.time &&
+          incoming().diff(existing()).affectedKeys().hasOnly(['title', 'subtitle', 'category', 'priceLabel', 'rating', 'updatedAt']);
+        allow delete: if isValidId(userId) && isValidId(itemId) && isOwner(userId);
+      }
+
+      match /ai_messages/{msgId} {
+        allow get: if isValidId(userId) && isValidId(msgId) && isOwner(userId);
+        allow list: if isValidId(userId) && isOwner(userId);
+        allow create: if isValidId(userId) && isValidId(msgId) && isOwner(userId) &&
+          incoming().keys().hasAll(['userId', 'isUser', 'text', 'isError', 'createdAt']) &&
+          incoming().keys().hasOnly(['userId', 'isUser', 'text', 'toolTraceSummary', 'isError', 'createdAt']) &&
+          incoming().createdAt is timestamp && incoming().createdAt <= request.time &&
+          isValidAiMessage(incoming(), userId);
+        allow update: if false;
+        allow delete: if isValidId(userId) && isValidId(msgId) && isOwner(userId);
+      }
+    }
+  }
+}

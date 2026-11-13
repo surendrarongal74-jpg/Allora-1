@@ -1,0 +1,211 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "UserProfile",
+      "description": "User travel preferences and ALLORA assistant settings",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "description": "Firebase Auth UID" },
+        "displayName": { "type": "string", "description": "Display name" },
+        "preferredCurrency": { "type": "string", "description": "ISO currency code" },
+        "temperatureUnit": { "type": "string", "enum": ["METRIC", "IMPERIAL"] },
+        "preferredCabinClass": { "type": "string", "enum": ["ECONOMY", "PREMIUM_ECONOMY", "BUSINESS", "FIRST"] },
+        "homeAirportIata": { "type": "string", "description": "Home airport IATA code" },
+        "travelStyle": { "type": "string", "description": "Preferred travel style" },
+        "budgetTier": { "type": "string", "description": "Default budget preference" },
+        "biometricThresholdUsd": { "type": "number", "description": "Approval threshold in USD" },
+        "darkGlassTheme": { "type": "boolean", "description": "Dark glass theme toggle" },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Server timestamp" },
+        "updatedAt": { "type": "string", "format": "date-time", "description": "Server timestamp" }
+      },
+      "required": [
+        "userId",
+        "displayName",
+        "preferredCurrency",
+        "temperatureUnit",
+        "preferredCabinClass",
+        "homeAirportIata",
+        "biometricThresholdUsd",
+        "darkGlassTheme",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "TripPlan": {
+      "title": "TripPlan",
+      "description": "User planned or AI-generated trip overview",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "title": { "type": "string" },
+        "destination": { "type": "string" },
+        "startDate": { "type": "string" },
+        "endDate": { "type": "string" },
+        "travellersCount": { "type": "integer" },
+        "budgetUsd": { "type": "number" },
+        "style": { "type": "string" },
+        "status": { "type": "string", "enum": ["PLANNED", "UPCOMING", "COMPLETED"] },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": [
+        "userId",
+        "title",
+        "destination",
+        "startDate",
+        "endDate",
+        "travellersCount",
+        "budgetUsd",
+        "style",
+        "status",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "BookingDoc": {
+      "title": "BookingDoc",
+      "description": "User booking hold or confirmed reservation record",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "referenceCode": { "type": "string" },
+        "bookingType": { "type": "string", "enum": ["FLIGHT", "HOTEL", "CAR_RENTAL", "DINING", "ACTIVITY"] },
+        "title": { "type": "string" },
+        "providerSource": { "type": "string" },
+        "providerPnr": { "type": "string" },
+        "originOrLocation": { "type": "string" },
+        "destination": { "type": "string" },
+        "totalAmountUsd": { "type": "number" },
+        "status": { "type": "string", "enum": ["REQUESTED", "HELD", "USER_APPROVED", "CONFIRMED", "CANCELLED", "NOT_BOOKABLE"] },
+        "sha256AuditHash": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": [
+        "userId",
+        "referenceCode",
+        "bookingType",
+        "title",
+        "providerSource",
+        "originOrLocation",
+        "totalAmountUsd",
+        "status",
+        "sha256AuditHash",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "ItinerarySlotDoc": {
+      "title": "ItinerarySlotDoc",
+      "description": "Persisted itinerary stop belonging to a specific user trip",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "tripId": { "type": "string" },
+        "dayNumber": { "type": "integer" },
+        "timeRange": { "type": "string" },
+        "title": { "type": "string" },
+        "location": { "type": "string" },
+        "latitude": { "type": "number" },
+        "longitude": { "type": "number" },
+        "category": { "type": "string" },
+        "durationMinutes": { "type": "integer" },
+        "routeSequence": { "type": "integer" },
+        "notes": { "type": "string" },
+        "estimatedCostUsd": { "type": "number" },
+        "calSyncStatus": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": [
+        "userId",
+        "tripId",
+        "dayNumber",
+        "timeRange",
+        "title",
+        "location",
+        "category",
+        "durationMinutes",
+        "routeSequence",
+        "notes",
+        "estimatedCostUsd",
+        "calSyncStatus",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "AiMessageDoc": {
+      "title": "AiMessageDoc",
+      "description": "Persisted ALLORA AI conversation message with optional tool summary",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "isUser": { "type": "boolean" },
+        "text": { "type": "string" },
+        "toolTraceSummary": { "type": "string" },
+        "isError": { "type": "boolean" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": [
+        "userId",
+        "isUser",
+        "text",
+        "isError",
+        "createdAt"
+      ]
+    },
+    "SavedItemDoc": {
+      "title": "SavedItemDoc",
+      "description": "Saved travel destination, flight, hotel, attraction, or itinerary",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "itemType": { "type": "string", "enum": ["DESTINATION", "HOTEL", "FLIGHT", "ATTRACTION", "ITINERARY"] },
+        "title": { "type": "string" },
+        "subtitle": { "type": "string" },
+        "category": { "type": "string" },
+        "priceLabel": { "type": "string" },
+        "rating": { "type": "number" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": [
+        "userId",
+        "itemType",
+        "title",
+        "subtitle",
+        "category",
+        "priceLabel",
+        "rating",
+        "createdAt",
+        "updatedAt"
+      ]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": { "$ref": "#/entities/UserProfile" },
+      "description": "Per-user ALLORA profile and travel preferences"
+    },
+    "/users/{userId}/trips/{tripId}": {
+      "schema": { "$ref": "#/entities/TripPlan" },
+      "description": "User travel plans and AI itineraries"
+    },
+    "/users/{userId}/trips/{tripId}/itinerary_slots/{slotId}": {
+      "schema": { "$ref": "#/entities/ItinerarySlotDoc" },
+      "description": "Persisted itinerary stops scoped to a specific trip"
+    },
+    "/users/{userId}/bookings/{bookingId}": {
+      "schema": { "$ref": "#/entities/BookingDoc" },
+      "description": "User booking holds, approvals, and confirmed PNR records"
+    },
+    "/users/{userId}/saved_items/{itemId}": {
+      "schema": { "$ref": "#/entities/SavedItemDoc" },
+      "description": "User bookmarked destinations, hotels, flights, and attractions"
+    },
+    "/users/{userId}/ai_messages/{msgId}": {
+      "schema": { "$ref": "#/entities/AiMessageDoc" },
+      "description": "Persisted AI assistant conversation messages"
+    }
+  }
+}

@@ -1,0 +1,22 @@
+<resources>
+    <string name="app_name">ALLORA</string>
+    <string name="tagline">Your life, effortlessly connected.</string>
+    <string name="nav_home">Home</string>
+    <string name="nav_discover">Discover</string>
+    <string name="nav_trips">Trips</string>
+    <string name="nav_bookings">Bookings</string>
+    <string name="nav_profile">Profile</string>
+    <string name="nav_audit">Audit Hub</string>
+    <string name="search_placeholder">Plan Tokyo, compare flights, check weather…</string>
+    <string name="assistant_title">ALLORA AI Companion</string>
+    <string name="camera_title">Travel &amp; Architecture Camera</string>
+    <string name="camera_permission_title">Camera Access Needed</string>
+    <string name="camera_permission_rationale">Allow camera access to capture architectural landmarks and travel moments directly into your personal ALLORA log.</string>
+    <string name="camera_grant_permission">Enable Camera</string>
+    <string name="location_service_channel_name">Live Travel Location</string>
+    <string name="location_service_channel_desc">Updates nearby landmarks, weather context, and route distances while active tracking is enabled.</string>
+    <string name="location_service_notif_title">ALLORA Location Tracking Active</string>
+    <string name="location_service_notif_body">Refreshing nearby landmarks and travel route accuracy.</string>
+    <string name="location_service_stop_action">Stop Tracking</string>
+    <string name="maps_key_missing_banner">Configure MAPS_API_KEY in the AI Studio Secrets panel to enable live Google Maps tiles.</string>
+</resources>
